@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Navbar } from "@/components/layout/Navbar";
 import { DisclaimerBanner } from "@/components/layout/DisclaimerBanner";
+import { ReportScanner } from "@/components/ReportScanner";
 import { inputSchema, HealthInputs, conditionsEnum } from "@/lib/types";
 import { analyzeHealthData } from "@/lib/analyzer";
 import { useHealthReport } from "@/hooks/use-health-report";
@@ -89,6 +90,22 @@ export default function InputForm() {
             <Button variant="outline" onClick={clearAll}>Clear All</Button>
             <Button variant="secondary" onClick={loadSample}>Load Sample Data</Button>
           </div>
+        </div>
+
+        <div className="mb-6">
+          <ReportScanner
+            onExtracted={(values) => {
+              const current = form.getValues();
+              const merged: HealthInputs = { ...current };
+              (Object.entries(values) as [keyof HealthInputs, unknown][]).forEach(([k, v]) => {
+                if (v !== undefined && v !== null && v !== "") {
+                  // @ts-expect-error dynamic merge
+                  merged[k] = v;
+                }
+              });
+              form.reset(merged);
+            }}
+          />
         </div>
 
         <Form {...form}>
