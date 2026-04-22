@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import InputForm from "@/pages/input";
 import Results from "@/pages/results";
+import { TermsModal } from "@/components/TermsModal";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ function App() {
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <Router />
         </WouterRouter>
+        <TermsModal />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

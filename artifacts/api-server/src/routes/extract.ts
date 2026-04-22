@@ -7,7 +7,7 @@ const baseURL = process.env.AI_INTEGRATIONS_GEMINI_BASE_URL;
 const apiKey = process.env.AI_INTEGRATIONS_GEMINI_API_KEY;
 
 const ai = baseURL && apiKey
-  ? new GoogleGenAI({ apiKey, httpOptions: { baseUrl: baseURL } })
+  ? new GoogleGenAI({ apiKey, httpOptions: { apiVersion: "", baseUrl: baseURL } })
   : null;
 
 const EXTRACTION_PROMPT = `You are a medical lab report parser. Extract numerical values from this medical/lab report image.
@@ -39,7 +39,21 @@ Return ONLY a JSON object with these optional keys (omit any key whose value is 
   "hemoglobin": number (g/dL),
   "wbc": number (×10³/µL),
   "platelets": number (×10³/µL — if reported as 250000, return 250),
-  "rbc": number (×10⁶/µL)
+  "rbc": number (×10⁶/µL),
+  "hematocrit": number (%),
+  "mcv": number (fL),
+  "esr": number (mm/hr),
+  "crp": number (mg/L),
+  "vitaminD": number (ng/mL — convert nmol/L by dividing by 2.5),
+  "vitaminB12": number (pg/mL),
+  "folate": number (ng/mL),
+  "iron": number (µg/dL),
+  "ferritin": number (ng/mL),
+  "sodium": number (mEq/L),
+  "potassium": number (mEq/L),
+  "calcium": number (mg/dL),
+  "magnesium": number (mg/dL),
+  "vldl": number (mg/dL)
 }
 
 Rules:

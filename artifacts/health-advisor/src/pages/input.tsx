@@ -119,6 +119,9 @@ export default function InputForm() {
                 <TabsTrigger value="liver">Liver</TabsTrigger>
                 <TabsTrigger value="kidney">Kidney</TabsTrigger>
                 <TabsTrigger value="cbc">CBC</TabsTrigger>
+                <TabsTrigger value="vitamins">Vitamins & Iron</TabsTrigger>
+                <TabsTrigger value="electrolytes">Electrolytes</TabsTrigger>
+                <TabsTrigger value="inflammation">Inflammation</TabsTrigger>
               </TabsList>
 
               <div className="mt-6">
@@ -315,6 +318,13 @@ export default function InputForm() {
                           <FormMessage />
                         </FormItem>
                       )} />
+                      <FormField control={form.control} name="vldl" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>VLDL (mg/dL)</FormLabel>
+                          <FormControl><Input type="number" placeholder="e.g. 25" {...field} value={field.value || ''} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -454,6 +464,130 @@ export default function InputForm() {
                         <FormItem>
                           <FormLabel>RBC (×10⁶/µL)</FormLabel>
                           <FormControl><Input type="number" step="0.1" placeholder="e.g. 4.5" {...field} value={field.value || ''} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="hematocrit" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Hematocrit (%)</FormLabel>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g. 42" {...field} value={field.value || ''} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="mcv" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>MCV (fL)</FormLabel>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g. 88" {...field} value={field.value || ''} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="vitamins">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Vitamins & Iron</CardTitle>
+                      <CardDescription>Vitamin levels and iron stores.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField control={form.control} name="vitaminD" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Vitamin D / 25-OH (ng/mL)</FormLabel>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g. 35" {...field} value={field.value || ''} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="vitaminB12" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Vitamin B12 (pg/mL)</FormLabel>
+                          <FormControl><Input type="number" placeholder="e.g. 450" {...field} value={field.value || ''} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="folate" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Folate (ng/mL)</FormLabel>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g. 8" {...field} value={field.value || ''} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="iron" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Serum Iron (µg/dL)</FormLabel>
+                          <FormControl><Input type="number" placeholder="e.g. 90" {...field} value={field.value || ''} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="ferritin" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ferritin (ng/mL)</FormLabel>
+                          <FormControl><Input type="number" placeholder="e.g. 80" {...field} value={field.value || ''} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="electrolytes">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Electrolytes & Minerals</CardTitle>
+                      <CardDescription>Sodium, potassium, calcium and magnesium.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField control={form.control} name="sodium" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sodium (mEq/L)</FormLabel>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g. 140" {...field} value={field.value || ''} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="potassium" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Potassium (mEq/L)</FormLabel>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g. 4.2" {...field} value={field.value || ''} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="calcium" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Calcium (mg/dL)</FormLabel>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g. 9.5" {...field} value={field.value || ''} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="magnesium" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Magnesium (mg/dL)</FormLabel>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g. 2.0" {...field} value={field.value || ''} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="inflammation">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Inflammation Markers</CardTitle>
+                      <CardDescription>ESR and CRP help detect inflammation or infection.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField control={form.control} name="esr" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>ESR (mm/hr)</FormLabel>
+                          <FormControl><Input type="number" placeholder="e.g. 12" {...field} value={field.value || ''} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="crp" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CRP (mg/L)</FormLabel>
+                          <FormControl><Input type="number" step="0.1" placeholder="e.g. 1.5" {...field} value={field.value || ''} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
