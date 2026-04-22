@@ -13,6 +13,9 @@ export function analyzeHealthData(inputs: HealthInputs): AnalysisResult {
     liver: 100,
     kidney: 100,
     cbc: 100,
+    inflammation: 100,
+    vitamins: 100,
+    electrolytes: 100,
   };
 
   const addFlag = (metric: string, value: number, status: Status, severity: Severity, explanation: string, category: string, unit: string) => {
@@ -90,6 +93,55 @@ export function analyzeHealthData(inputs: HealthInputs): AnalysisResult {
   if (inputs.wbc) {
     if (inputs.wbc < 4) addFlag("WBC", inputs.wbc, "low", "watch", "Low white-cell count may reduce infection resistance.", "cbc", "×10³/µL");
     else if (inputs.wbc > 11) addFlag("WBC", inputs.wbc, "high", "watch", "Elevated WBC may suggest infection or inflammation.", "cbc", "×10³/µL");
+  }
+
+  // Inflammation
+  if (inputs.esr) {
+    const limit = inputs.gender === "female" ? 20 : 15;
+    if (inputs.esr > limit) addFlag("ESR", inputs.esr, "high", "watch", "Elevated ESR can indicate inflammation or infection.", "inflammation", "mm/hr");
+  }
+  if (inputs.crp) {
+    if (inputs.crp >= 10) addFlag("CRP", inputs.crp, "high", "warning", "High CRP suggests significant inflammation or infection.", "inflammation", "mg/L");
+    else if (inputs.crp >= 3) addFlag("CRP", inputs.crp, "borderline", "watch", "Mildly elevated CRP. May indicate low-grade inflammation.", "inflammation", "mg/L");
+  }
+
+  // Vitamins & Iron
+  if (inputs.vitaminD) {
+    if (inputs.vitaminD < 20) addFlag("Vitamin D", inputs.vitaminD, "low", "warning", "Vitamin D deficiency. Affects bone, immunity and mood.", "vitamins", "ng/mL");
+    else if (inputs.vitaminD < 30) addFlag("Vitamin D", inputs.vitaminD, "borderline", "watch", "Vitamin D insufficiency. Sunlight and supplementation help.", "vitamins", "ng/mL");
+  }
+  if (inputs.vitaminB12) {
+    if (inputs.vitaminB12 < 200) addFlag("Vitamin B12", inputs.vitaminB12, "low", "warning", "B12 deficiency can cause fatigue, neurological issues.", "vitamins", "pg/mL");
+    else if (inputs.vitaminB12 < 300) addFlag("Vitamin B12", inputs.vitaminB12, "borderline", "watch", "B12 in low-normal range. Consider supplementation if symptomatic.", "vitamins", "pg/mL");
+  }
+  if (inputs.folate && inputs.folate < 3) {
+    addFlag("Folate", inputs.folate, "low", "warning", "Low folate. Important for red-cell production and pregnancy.", "vitamins", "ng/mL");
+  }
+  if (inputs.ferritin) {
+    const minFerritin = inputs.gender === "female" ? 15 : 30;
+    if (inputs.ferritin < minFerritin) addFlag("Ferritin", inputs.ferritin, "low", "warning", "Low ferritin indicates depleted iron stores.", "vitamins", "ng/mL");
+    else if (inputs.ferritin > 300) addFlag("Ferritin", inputs.ferritin, "high", "watch", "Elevated ferritin. May indicate inflammation or iron overload.", "vitamins", "ng/mL");
+  }
+  if (inputs.iron) {
+    if (inputs.iron < 50) addFlag("Iron", inputs.iron, "low", "watch", "Low serum iron.", "vitamins", "µg/dL");
+    else if (inputs.iron > 170) addFlag("Iron", inputs.iron, "high", "watch", "Elevated serum iron.", "vitamins", "µg/dL");
+  }
+
+  // Electrolytes
+  if (inputs.sodium) {
+    if (inputs.sodium < 135) addFlag("Sodium", inputs.sodium, "low", "warning", "Hyponatremia. Can cause confusion, weakness.", "electrolytes", "mEq/L");
+    else if (inputs.sodium > 145) addFlag("Sodium", inputs.sodium, "high", "warning", "Hypernatremia. Often linked to dehydration.", "electrolytes", "mEq/L");
+  }
+  if (inputs.potassium) {
+    if (inputs.potassium < 3.5) addFlag("Potassium", inputs.potassium, "low", "warning", "Hypokalemia. Can affect heart rhythm and muscles.", "electrolytes", "mEq/L");
+    else if (inputs.potassium > 5.0) addFlag("Potassium", inputs.potassium, "high", "warning", "Hyperkalemia. Can affect heart rhythm; needs evaluation.", "electrolytes", "mEq/L");
+  }
+  if (inputs.calcium) {
+    if (inputs.calcium < 8.5) addFlag("Calcium", inputs.calcium, "low", "watch", "Low calcium. Affects bones, muscles and nerves.", "electrolytes", "mg/dL");
+    else if (inputs.calcium > 10.5) addFlag("Calcium", inputs.calcium, "high", "watch", "High calcium. May indicate parathyroid or other issues.", "electrolytes", "mg/dL");
+  }
+  if (inputs.magnesium) {
+    if (inputs.magnesium < 1.7) addFlag("Magnesium", inputs.magnesium, "low", "watch", "Low magnesium can cause cramps, fatigue, arrhythmia.", "electrolytes", "mg/dL");
   }
 
   // Normalize scores
@@ -312,6 +364,9 @@ export function analyzeHealthData(inputs: HealthInputs): AnalysisResult {
     liver: "liver function",
     kidney: "kidney function",
     cbc: "blood count",
+    inflammation: "inflammation markers",
+    vitamins: "vitamins & iron",
+    electrolytes: "electrolytes",
   };
 
   Object.entries(scores).forEach(([cat, score]) => {
@@ -380,7 +435,10 @@ function hasValueInCategory(inputs: HealthInputs, category: string): boolean {
     case "thyroid": return Boolean(inputs.tsh || inputs.t3 || inputs.t4);
     case "liver": return Boolean(inputs.alt || inputs.ast || inputs.alp || inputs.bilirubin);
     case "kidney": return Boolean(inputs.creatinine || inputs.urea || inputs.uricAcid);
-    case "cbc": return Boolean(inputs.hemoglobin || inputs.wbc || inputs.platelets || inputs.rbc);
+    case "cbc": return Boolean(inputs.hemoglobin || inputs.wbc || inputs.platelets || inputs.rbc || inputs.hematocrit || inputs.mcv);
+    case "inflammation": return Boolean(inputs.esr || inputs.crp);
+    case "vitamins": return Boolean(inputs.vitaminD || inputs.vitaminB12 || inputs.folate || inputs.iron || inputs.ferritin);
+    case "electrolytes": return Boolean(inputs.sodium || inputs.potassium || inputs.calcium || inputs.magnesium);
     default: return false;
   }
 }

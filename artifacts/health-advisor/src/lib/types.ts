@@ -56,6 +56,28 @@ export const inputSchema = z.object({
   wbc: z.coerce.number().min(0.5).max(50).optional(),
   platelets: z.coerce.number().min(10).max(1000).optional(),
   rbc: z.coerce.number().min(1).max(10).optional(),
+  hematocrit: z.coerce.number().min(15).max(70).optional(),
+  mcv: z.coerce.number().min(50).max(150).optional(),
+
+  // Inflammation
+  esr: z.coerce.number().min(0).max(150).optional(),
+  crp: z.coerce.number().min(0).max(300).optional(),
+
+  // Vitamins & Iron
+  vitaminD: z.coerce.number().min(1).max(150).optional(),
+  vitaminB12: z.coerce.number().min(50).max(2000).optional(),
+  folate: z.coerce.number().min(1).max(50).optional(),
+  iron: z.coerce.number().min(10).max(400).optional(),
+  ferritin: z.coerce.number().min(1).max(2000).optional(),
+
+  // Electrolytes
+  sodium: z.coerce.number().min(110).max(170).optional(),
+  potassium: z.coerce.number().min(2).max(8).optional(),
+  calcium: z.coerce.number().min(5).max(15).optional(),
+  magnesium: z.coerce.number().min(0.5).max(5).optional(),
+
+  // Extended Lipids
+  vldl: z.coerce.number().min(1).max(100).optional(),
 });
 
 export type HealthInputs = z.infer<typeof inputSchema>;
