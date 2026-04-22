@@ -17,6 +17,7 @@ import {
   Dumbbell, Utensils, Printer, Download, Edit, CalendarDays, Activity,
   Sparkles, ListChecks, Stethoscope, ShieldCheck, ShieldAlert
 } from "lucide-react";
+import { NearbySpecialists } from "@/components/NearbySpecialists";
 import { format } from "date-fns";
 
 export default function Results() {
@@ -411,6 +412,9 @@ export default function Results() {
             </Card>
           </div>
         </div>
+
+        {/* Nearby Specialists */}
+        <NearbySpecialists flags={lastReport.flags} />
 
         {/* Follow Up */}
         <Card className="shadow-sm border-primary/20 bg-primary/5 print-page-break">
