@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Health Report Advisor"
+version = "1.0.0"
+id = "artifacts/health-advisor"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23662
+
+[services.development]
+run = "pnpm --filter @workspace/health-advisor run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/health-advisor", "run", "build" ]
+publicDir = "artifacts/health-advisor/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23662"
+BASE_PATH = "/"
