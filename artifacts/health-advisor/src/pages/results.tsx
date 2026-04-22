@@ -1,5 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
+import { AskAI } from "@/components/AskAI";
+import { DoctorSummary } from "@/components/DoctorSummary";
+import { RemindersButton } from "@/components/RemindersButton";
+import { Save, Check } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Card, CardContent, CardDescription, CardHeader, CardTitle 
 } from "@/components/ui/card";
@@ -22,7 +27,16 @@ import { format } from "date-fns";
 
 export default function Results() {
   const [, setLocation] = useLocation();
-  const { lastReport, lastInputs } = useHealthReport();
+  const { lastReport, lastInputs, saveToHistory } = useHealthReport();
+  const { toast } = useToast();
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = () => {
+    saveToHistory();
+    setSaved(true);
+    toast({ title: "Saved to history", description: "View this report anytime in Trends." });
+    setTimeout(() => setSaved(false), 3000);
+  };
 
   useEffect(() => {
     if (!lastReport) {
@@ -107,7 +121,17 @@ export default function Results() {
               <Download className="h-4 w-4 mr-2" />
               Download HTML
             </Button>
+            <Button variant={saved ? "secondary" : "default"} size="sm" onClick={handleSave} disabled={saved}>
+              {saved ? <Check className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+              {saved ? "Saved" : "Save to history"}
+            </Button>
           </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 print-hide">
+          <Link href="/plan"><Button variant="outline" size="sm" className="gap-2"><Sparkles className="h-4 w-4" />Get 7-Day Plan</Button></Link>
+          <DoctorSummary inputs={lastInputs ?? {}} report={lastReport} />
+          <RemindersButton report={lastReport} />
         </div>
 
         {/* Hero Summary */}
