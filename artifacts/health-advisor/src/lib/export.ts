@@ -97,12 +97,32 @@ export function exportToHtml(report: AnalysisResult): string {
     </div>
 
     <div class="summary-box">
-      <h3>Summary</h3>
-      <p style="font-size: 16px;">${report.summary}</p>
+      <h3>${report.summaryDetail?.headline ?? "Summary"}</h3>
+      ${(report.summaryDetail?.paragraphs ?? [report.summary]).map(p => `<p style="font-size: 15px; margin: 8px 0;">${p}</p>`).join('')}
       <div style="margin-top: 16px; font-weight: bold;">
-        BMI: ${report.bmi.value} (${report.bmi.category})
+        BMI: ${report.bmi.value || "--"} (${report.bmi.category})
+        ${report.summaryDetail ? ` &nbsp;·&nbsp; Overall risk: <span style="text-transform: capitalize;">${report.summaryDetail.riskLevel}</span>` : ""}
       </div>
     </div>
+
+    ${report.actionPlan && report.actionPlan.length > 0 ? `
+    <h2>Your Action Plan</h2>
+    <div class="card">
+      <ol style="padding-left: 20px; margin: 0;">
+        ${report.actionPlan.map(a => `
+          <li style="margin-bottom: 14px;">
+            <strong>${a.title}</strong>
+            <span style="text-transform: uppercase; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 999px; margin-left: 6px; ${
+              a.priority === "urgent" ? "background:#fee2e2;color:#dc2626;"
+              : a.priority === "soon" ? "background:#fef3c7;color:#b45309;"
+              : "background:#ccfbf1;color:#0d9488;"
+            }">${a.priority}</span>
+            <p style="margin: 4px 0 0 0; color: #4b5563; font-size: 14px;">${a.detail}</p>
+          </li>
+        `).join('')}
+      </ol>
+    </div>
+    ` : ''}
 
     <h2>Areas to Monitor</h2>
     ${flagsHtml}

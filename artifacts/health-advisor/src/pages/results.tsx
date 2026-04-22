@@ -14,7 +14,8 @@ import {
 } from "recharts";
 import { 
   AlertCircle, AlertTriangle, CheckCircle2, ChevronRight, Droplets, 
-  Dumbbell, Utensils, Printer, Download, Edit, CalendarDays, Activity 
+  Dumbbell, Utensils, Printer, Download, Edit, CalendarDays, Activity,
+  Sparkles, ListChecks, Stethoscope, ShieldCheck, ShieldAlert
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -114,26 +115,123 @@ export default function Results() {
             <div className="absolute right-0 top-0 opacity-10 pointer-events-none">
               <Activity className="w-64 h-64 -mt-10 -mr-10" />
             </div>
-            <CardContent className="p-8 relative z-10">
-              <h2 className="text-2xl font-semibold mb-4">Summary</h2>
-              <p className="text-lg leading-relaxed text-primary-foreground/90">
-                {lastReport.summary}
-              </p>
+            <CardContent className="p-8 relative z-10 space-y-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5" />
+                <span className="text-sm uppercase tracking-wider font-medium opacity-90">Summary of your report</span>
+              </div>
+              <h2 className="text-2xl font-semibold leading-snug">
+                {lastReport.summaryDetail?.headline ?? "Your Health Report"}
+              </h2>
+              <div className="space-y-3">
+                {(lastReport.summaryDetail?.paragraphs ?? [lastReport.summary]).map((p, i) => (
+                  <p key={i} className="text-base leading-relaxed text-primary-foreground/90">{p}</p>
+                ))}
+              </div>
+              {lastReport.summaryDetail && (
+                <div className="grid sm:grid-cols-2 gap-3 pt-2">
+                  {lastReport.summaryDetail.topConcerns.length > 0 && (
+                    <div className="bg-primary-foreground/10 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <ShieldAlert className="h-4 w-4" />
+                        <span className="text-xs uppercase tracking-wider font-semibold">Watch closely</span>
+                      </div>
+                      <ul className="text-sm space-y-1 text-primary-foreground/90">
+                        {lastReport.summaryDetail.topConcerns.slice(0, 4).map(c => (
+                          <li key={c}>• {c}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {lastReport.summaryDetail.positives.length > 0 && (
+                    <div className="bg-primary-foreground/10 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <ShieldCheck className="h-4 w-4" />
+                        <span className="text-xs uppercase tracking-wider font-semibold">Looking healthy</span>
+                      </div>
+                      <ul className="text-sm space-y-1 text-primary-foreground/90 capitalize">
+                        {lastReport.summaryDetail.positives.map(p => (
+                          <li key={p}>• {p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          <Card className="bg-card shadow-sm">
-            <CardContent className="p-6 flex flex-col justify-center h-full">
-              <div className="text-center space-y-2">
-                <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">BMI</span>
-                <div className="text-4xl font-bold">{lastReport.bmi.value || "--"}</div>
-                <div className="inline-flex items-center px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-sm font-medium mt-2">
-                  {lastReport.bmi.category}
+          <div className="space-y-6 flex flex-col">
+            <Card className="bg-card shadow-sm">
+              <CardContent className="p-6 flex flex-col justify-center">
+                <div className="text-center space-y-2">
+                  <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">BMI</span>
+                  <div className="text-4xl font-bold">{lastReport.bmi.value || "--"}</div>
+                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-sm font-medium mt-2">
+                    {lastReport.bmi.category}
+                  </div>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
+            {lastReport.summaryDetail && (
+              <Card className="bg-card shadow-sm flex-1">
+                <CardContent className="p-6 flex flex-col justify-center text-center space-y-2">
+                  <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Overall Risk</span>
+                  <div className={`text-2xl font-bold capitalize ${
+                    lastReport.summaryDetail.riskLevel === "high" ? "text-destructive"
+                    : lastReport.summaryDetail.riskLevel === "elevated" ? "text-amber-600 dark:text-amber-400"
+                    : lastReport.summaryDetail.riskLevel === "moderate" ? "text-blue-600 dark:text-blue-400"
+                    : "text-primary"
+                  }`}>
+                    {lastReport.summaryDetail.riskLevel}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Based on {lastReport.flags.length} flagged value{lastReport.flags.length === 1 ? "" : "s"}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+
+        {/* Immediate Action Plan */}
+        {lastReport.actionPlan && lastReport.actionPlan.length > 0 && (
+          <Card className="shadow-sm border-primary/30 print-page-break">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ListChecks className="h-5 w-5 text-primary" />
+                Your Action Plan
+              </CardTitle>
+              <CardDescription>Concrete next steps you can start this week, ordered by priority.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ol className="space-y-3">
+                {lastReport.actionPlan.map((item, i) => {
+                  const badge =
+                    item.priority === "urgent" ? "bg-destructive/10 text-destructive border-destructive/20"
+                    : item.priority === "soon" ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
+                    : "bg-primary/10 text-primary border-primary/20";
+                  return (
+                    <li key={i} className="flex gap-4 p-4 rounded-lg border bg-background">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                        {i + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <h4 className="font-semibold">{item.title}</h4>
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${badge}`}>
+                            {item.priority}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{item.detail}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
             </CardContent>
           </Card>
-        </div>
+        )}
 
         {/* System Scores Chart */}
         <Card className="shadow-sm">
@@ -318,25 +416,45 @@ export default function Results() {
         <Card className="shadow-sm border-primary/20 bg-primary/5 print-page-break">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-primary" />
-              Suggested Next Steps
+              <Stethoscope className="h-5 w-5 text-primary" />
+              Suggested Medical Follow-Ups
             </CardTitle>
-            <CardDescription>Bring this list to your next medical appointment.</CardDescription>
+            <CardDescription>Tests and consultations to discuss at your next appointment.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {lastReport.followUp.map((item, i) => (
-                <div key={i} className="flex gap-4 p-4 bg-background rounded-lg border shadow-sm">
-                  <div className="mt-1">
-                    <div className="h-2 w-2 rounded-full bg-primary mt-1.5" />
+              {lastReport.followUp.map((item, i) => {
+                const dot =
+                  item.priority === "urgent" ? "bg-destructive"
+                  : item.priority === "soon" ? "bg-amber-500"
+                  : "bg-primary";
+                const label =
+                  item.priority === "urgent" ? "Urgent"
+                  : item.priority === "soon" ? "Soon"
+                  : "Routine";
+                return (
+                  <div key={i} className="flex gap-4 p-4 bg-background rounded-lg border shadow-sm">
+                    <div className="mt-1.5">
+                      <div className={`h-2.5 w-2.5 rounded-full ${dot}`} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="font-semibold text-foreground">{item.test}</h4>
+                        {item.priority && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground border rounded-full px-2 py-0.5">
+                            {label}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium text-primary mt-0.5 flex items-center gap-1.5">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        {item.when}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">{item.why}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground">{item.test}</h4>
-                    <p className="text-sm font-medium text-primary mt-0.5">{item.when}</p>
-                    <p className="text-sm text-muted-foreground mt-1">{item.why}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>

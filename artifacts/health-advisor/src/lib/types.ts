@@ -104,6 +104,21 @@ export interface FollowUp {
   test: string;
   when: string;
   why: string;
+  priority?: "urgent" | "soon" | "routine";
+}
+
+export interface ActionItem {
+  title: string;
+  detail: string;
+  priority: "urgent" | "soon" | "routine";
+}
+
+export interface SummaryDetail {
+  headline: string;
+  paragraphs: string[];
+  topConcerns: string[];
+  positives: string[];
+  riskLevel: "low" | "moderate" | "elevated" | "high";
 }
 
 export interface AnalysisResult {
@@ -116,6 +131,8 @@ export interface AnalysisResult {
   followUp: FollowUp[];
   bmi: { value: number; category: string };
   summary: string;
+  summaryDetail?: SummaryDetail;
+  actionPlan?: ActionItem[];
   scores: Record<string, number>;
   inputs: HealthInputs;
 }
