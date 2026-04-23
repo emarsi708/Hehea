@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, Send, Loader2, Sparkles, X, Bot } from "lucide-react";
+import { MessageCircle, Send, Loader2, Sparkles, X, Bot, Mic, MicOff } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useHealthReport } from "@/hooks/use-health-report";
 import { cn } from "@/lib/utils";
 
@@ -24,13 +25,104 @@ const SUGGESTED_GENERAL = [
   "Tips for better sleep and stress",
 ];
 
+type SpeechRecognitionInstance = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((e: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => void) | null;
+  onerror: ((e: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+};
+
 export function ChatWidget() {
   const { lastInputs, lastReport } = useHealthReport();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [listening, setListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const finalTranscriptRef = useRef<string>("");
+
+  const SpeechRecognitionCtor = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    return (window as unknown as {
+      SpeechRecognition?: new () => SpeechRecognitionInstance;
+      webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
+    }).SpeechRecognition ?? (window as unknown as {
+      webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
+    }).webkitSpeechRecognition ?? null;
+  }, []);
+  const voiceSupported = !!SpeechRecognitionCtor;
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.abort();
+    };
+  }, []);
+
+  const toggleVoice = () => {
+    if (!SpeechRecognitionCtor) {
+      toast({
+        title: "Voice not supported",
+        description: "Your browser does not support speech recognition. Try Chrome or Safari.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (listening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+    try {
+      const rec = new SpeechRecognitionCtor();
+      rec.continuous = false;
+      rec.interimResults = true;
+      rec.lang = navigator.language || "en-US";
+      finalTranscriptRef.current = input;
+      const base = input ? input + " " : "";
+      rec.onresult = (e) => {
+        let interim = "";
+        let final = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const r = e.results[i];
+          const txt = r[0].transcript;
+          if (r.isFinal) final += txt;
+          else interim += txt;
+        }
+        if (final) finalTranscriptRef.current = (finalTranscriptRef.current + " " + final).trim();
+        setInput((finalTranscriptRef.current + (interim ? " " + interim : "")).trim() || base + interim);
+      };
+      rec.onerror = (e) => {
+        setListening(false);
+        if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+          toast({
+            title: "Microphone blocked",
+            description: "Please allow microphone access in your browser settings.",
+            variant: "destructive",
+          });
+        } else if (e.error !== "aborted" && e.error !== "no-speech") {
+          toast({ title: "Voice error", description: e.error, variant: "destructive" });
+        }
+      };
+      rec.onend = () => {
+        setListening(false);
+        recognitionRef.current = null;
+      };
+      recognitionRef.current = rec;
+      rec.start();
+      setListening(true);
+    } catch (err) {
+      setListening(false);
+      const msg = err instanceof Error ? err.message : "Could not start voice input";
+      toast({ title: "Voice error", description: msg, variant: "destructive" });
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -204,12 +296,26 @@ export function ChatWidget() {
               onKeyDown={e => {
                 if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); }
               }}
-              placeholder="Ask anything about health..."
+              placeholder={listening ? "Listening..." : "Ask anything about health..."}
               className="min-h-[40px] max-h-32 resize-none text-sm"
               disabled={loading}
               rows={1}
               data-testid="input-chat"
             />
+            {voiceSupported && (
+              <Button
+                type="button"
+                onClick={toggleVoice}
+                disabled={loading}
+                size="icon"
+                variant={listening ? "default" : "outline"}
+                className={cn("shrink-0", listening && "bg-destructive hover:bg-destructive/90 text-destructive-foreground animate-pulse")}
+                aria-label={listening ? "Stop voice input" : "Start voice input"}
+                data-testid="button-chat-mic"
+              >
+                {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+            )}
             <Button
               type="submit"
               disabled={!input.trim() || loading}
