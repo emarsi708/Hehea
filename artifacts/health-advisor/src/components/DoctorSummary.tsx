@@ -97,7 +97,7 @@ export function DoctorSummary({ inputs, report }: { inputs: Partial<HealthInputs
                   <h2 className="font-semibold">Recommended follow-ups</h2>
                   <ul className="list-disc pl-5 space-y-1">
                     {report.followUp.map((f, i) => (
-                      <li key={i}><strong>{f.test}</strong> in {f.timeframe} — {f.reason}</li>
+                      <li key={i}><strong>{f.test}</strong> — {f.when}. {f.why}</li>
                     ))}
                   </ul>
                 </div>
