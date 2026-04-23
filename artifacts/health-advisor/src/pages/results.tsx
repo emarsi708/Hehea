@@ -437,6 +437,9 @@ export default function Results() {
           </div>
         </div>
 
+        {/* Ask AI */}
+        <AskAI inputs={lastInputs ?? {}} report={lastReport} />
+
         {/* Nearby Specialists */}
         <NearbySpecialists flags={lastReport.flags} />
 
