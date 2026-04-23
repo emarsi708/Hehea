@@ -12,6 +12,7 @@ import Calculators from "@/pages/calculators";
 import Library from "@/pages/library";
 import Plan from "@/pages/plan";
 import { TermsModal } from "@/components/TermsModal";
+import { ChatWidget } from "@/components/ChatWidget";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ function App() {
           <Router />
         </WouterRouter>
         <TermsModal />
+        <ChatWidget />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
