@@ -2,9 +2,10 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, Send, Loader2, Sparkles, X, Bot, Mic, MicOff } from "lucide-react";
+import { MessageCircle, Send, Loader2, Sparkles, X, Bot, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useHealthReport } from "@/hooks/use-health-report";
+import { useT, useI18n, getLanguageName, isRTL } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const API = (import.meta.env.VITE_API_URL ?? "/api").replace(/\/$/, "");
@@ -40,14 +41,42 @@ type SpeechRecognitionInstance = {
 export function ChatWidget() {
   const { lastInputs, lastReport } = useHealthReport();
   const { toast } = useToast();
+  const t = useT();
+  const { lang } = useI18n();
+  const rtl = isRTL(lang);
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(false);
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const finalTranscriptRef = useRef<string>("");
+
+  const ttsSupported = typeof window !== "undefined" && "speechSynthesis" in window;
+
+  const speak = (text: string, idx: number) => {
+    if (!ttsSupported) return;
+    window.speechSynthesis.cancel();
+    if (speakingIndex === idx) {
+      setSpeakingIndex(null);
+      return;
+    }
+    const utter = new SpeechSynthesisUtterance(text.replace(/[*_#`]/g, ""));
+    utter.lang = navigator.language || "en-US";
+    utter.rate = 1;
+    utter.pitch = 1;
+    utter.onend = () => setSpeakingIndex(null);
+    utter.onerror = () => setSpeakingIndex(null);
+    setSpeakingIndex(idx);
+    window.speechSynthesis.speak(utter);
+  };
+
+  useEffect(() => {
+    return () => { if (ttsSupported) window.speechSynthesis.cancel(); };
+  }, [ttsSupported]);
 
   const SpeechRecognitionCtor = useMemo(() => {
     if (typeof window === "undefined") return null;
@@ -166,6 +195,7 @@ export function ChatWidget() {
           question: q,
           context: buildContext(),
           history: messages.slice(-6),
+          languageInstruction: lang === "en" ? undefined : `Please respond in ${getLanguageName(lang)}.`,
         }),
       });
       if (!res.ok) {
@@ -173,7 +203,12 @@ export function ChatWidget() {
         throw new Error(err.error || `Request failed (${res.status})`);
       }
       const data = await res.json();
-      setMessages([...newHistory, { role: "model", content: data.answer || "Sorry, I couldn't generate a response." }]);
+      const answer = data.answer || "Sorry, I couldn't generate a response.";
+      const updated = [...newHistory, { role: "model" as const, content: answer }];
+      setMessages(updated);
+      if (autoSpeak && ttsSupported) {
+        setTimeout(() => speak(answer, updated.length - 1), 100);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Network error. Please try again.";
       setMessages([...newHistory, { role: "model", content: msg }]);
@@ -202,6 +237,7 @@ export function ChatWidget() {
       {/* Chat panel */}
       {open && (
         <div
+          dir={rtl ? "rtl" : "ltr"}
           className="print-hide fixed z-40 bottom-24 right-5 w-[calc(100vw-2.5rem)] sm:w-[400px] max-w-[400px] h-[min(600px,calc(100vh-8rem))] bg-background border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200"
           data-testid="panel-chat"
         >
@@ -211,19 +247,38 @@ export function ChatWidget() {
               <Bot className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm leading-tight">HealthAdvisor AI</p>
+              <p className="font-semibold text-sm leading-tight">{t("chat.title")}</p>
               <p className="text-xs text-muted-foreground leading-tight">
-                {hasReport ? "Knows your latest report" : "General wellness Q&A"}
+                {hasReport ? t("chat.subtitle.report") : t("chat.subtitle.general")}
               </p>
             </div>
+            {ttsSupported && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => {
+                  setAutoSpeak(s => !s);
+                  if (autoSpeak) window.speechSynthesis.cancel();
+                }}
+                aria-label={autoSpeak ? "Disable auto-speak" : "Enable auto-speak"}
+                title={autoSpeak ? "Auto-speak on" : "Auto-speak off"}
+              >
+                {autoSpeak ? <Volume2 className="h-4 w-4 text-primary" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
+              </Button>
+            )}
             {messages.length > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs"
-                onClick={() => setMessages([])}
+                onClick={() => {
+                  setMessages([]);
+                  if (ttsSupported) window.speechSynthesis.cancel();
+                  setSpeakingIndex(null);
+                }}
               >
-                Clear
+                {t("chat.clear")}
               </Button>
             )}
           </div>
@@ -261,14 +316,28 @@ export function ChatWidget() {
                 ) : (
                   <>
                     {messages.map((m, i) => (
-                      <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
+                      <div key={i} className={cn("flex group", m.role === "user" ? "justify-end" : "justify-start")}>
                         <div className={cn(
-                          "max-w-[85%] rounded-2xl px-4 py-2 text-sm leading-relaxed whitespace-pre-wrap",
+                          "max-w-[85%] rounded-2xl px-4 py-2 text-sm leading-relaxed whitespace-pre-wrap relative",
                           m.role === "user"
                             ? "bg-primary text-primary-foreground rounded-tr-sm"
                             : "bg-muted rounded-tl-sm"
                         )}>
                           {m.content}
+                          {m.role === "model" && ttsSupported && (
+                            <button
+                              type="button"
+                              onClick={() => speak(m.content, i)}
+                              className="mt-1.5 text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                              aria-label={speakingIndex === i ? "Stop reading" : "Read aloud"}
+                            >
+                              {speakingIndex === i ? (
+                                <><VolumeX className="h-3 w-3" /> {t("chat.stop")}</>
+                              ) : (
+                                <><Volume2 className="h-3 w-3" /> {t("chat.read")}</>
+                              )}
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -296,7 +365,7 @@ export function ChatWidget() {
               onKeyDown={e => {
                 if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); }
               }}
-              placeholder={listening ? "Listening..." : "Ask anything about health..."}
+              placeholder={listening ? "..." : t("chat.placeholder")}
               className="min-h-[40px] max-h-32 resize-none text-sm"
               disabled={loading}
               rows={1}
