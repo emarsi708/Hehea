@@ -11,8 +11,16 @@ import Symptoms from "@/pages/symptoms";
 import Calculators from "@/pages/calculators";
 import Library from "@/pages/library";
 import Plan from "@/pages/plan";
+import Medications from "@/pages/medications";
+import Compare from "@/pages/compare";
+import Family from "@/pages/family";
+import CheckInPage from "@/pages/checkin";
+import Goals from "@/pages/goals";
+import Shared from "@/pages/shared";
 import { TermsModal } from "@/components/TermsModal";
 import { ChatWidget } from "@/components/ChatWidget";
+import { useI18n, isRTL } from "@/lib/i18n";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
@@ -27,12 +35,24 @@ function Router() {
       <Route path="/symptoms" component={Symptoms} />
       <Route path="/calculators" component={Calculators} />
       <Route path="/library" component={Library} />
+      <Route path="/medications" component={Medications} />
+      <Route path="/compare" component={Compare} />
+      <Route path="/family" component={Family} />
+      <Route path="/checkin" component={CheckInPage} />
+      <Route path="/goals" component={Goals} />
+      <Route path="/shared" component={Shared} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
 function App() {
+  const { lang } = useI18n();
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = isRTL(lang) ? "rtl" : "ltr";
+  }, [lang]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Activity, Menu } from "lucide-react";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ProfileSwitcher } from "@/components/ProfileSwitcher";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,10 +11,15 @@ import { useState } from "react";
 const NAV_LINKS = [
   { href: "/input", label: "New Report" },
   { href: "/results", label: "Results" },
-  { href: "/plan", label: "7-Day Plan" },
+  { href: "/family", label: "Family" },
+  { href: "/checkin", label: "Check-In" },
+  { href: "/goals", label: "Goals" },
+  { href: "/plan", label: "Plan" },
   { href: "/history", label: "Trends" },
+  { href: "/compare", label: "Compare" },
   { href: "/symptoms", label: "Symptoms" },
-  { href: "/calculators", label: "Calculators" },
+  { href: "/medications", label: "Meds" },
+  { href: "/calculators", label: "Calc" },
   { href: "/library", label: "Library" },
 ];
 
@@ -46,6 +52,7 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           <ProfileSwitcher />
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>

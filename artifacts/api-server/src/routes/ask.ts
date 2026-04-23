@@ -23,10 +23,11 @@ You help the user understand their lab values in plain language. Stay grounded i
 router.post("/ask", async (req, res) => {
   if (!ai) return res.status(503).json({ error: "AI service not configured" });
 
-  const { question, context, history } = req.body as {
+  const { question, context, history, languageInstruction } = req.body as {
     question?: string;
     context?: string;
     history?: { role: "user" | "model"; content: string }[];
+    languageInstruction?: string;
   };
 
   if (!question?.trim()) {
@@ -44,7 +45,7 @@ router.post("/ask", async (req, res) => {
           ]
         : []),
       ...(history ?? []).map(m => ({ role: m.role, parts: [{ text: m.content }] })),
-      { role: "user" as const, parts: [{ text: question }] },
+      { role: "user" as const, parts: [{ text: languageInstruction ? `${languageInstruction}\n\n${question}` : question }] },
     ];
 
     const response = await ai.models.generateContent({

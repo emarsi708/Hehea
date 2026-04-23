@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/layout/Navbar";
 import { useHealthReport } from "@/hooks/use-health-report";
 import { buildSevenDayPlan } from "@/lib/wellnessPlan";
+import { GroceryList } from "@/components/GroceryList";
 import { Coffee, Utensils, Moon, Apple, Dumbbell, Droplets, Target, Printer } from "lucide-react";
 
 export default function Plan() {
@@ -68,6 +69,8 @@ export default function Plan() {
             </Card>
           ))}
         </div>
+
+        <GroceryList plan={plan} />
 
         <Card>
           <CardHeader>

@@ -9,11 +9,44 @@ export interface SavedReport {
   report: AnalysisResult;
 }
 
+export interface Medication {
+  id: string;
+  name: string;
+  dose?: string;
+  frequency?: string;
+  startedOn?: string;
+  notes?: string;
+}
+
+export interface Goal {
+  id: string;
+  metric: string;
+  startValue: number;
+  targetValue: number;
+  unit: string;
+  deadline: string;
+  createdAt: string;
+  notes?: string;
+}
+
+export interface CheckIn {
+  date: string;
+  mood: 1 | 2 | 3 | 4 | 5;
+  energy: 1 | 2 | 3 | 4 | 5;
+  sleepHours: number;
+  waterGlasses: number;
+  exercised: boolean;
+  notes?: string;
+}
+
 export interface Profile {
   id: string;
   name: string;
   relation: string;
   history: SavedReport[];
+  medications?: Medication[];
+  checkIns?: CheckIn[];
+  goals?: Goal[];
 }
 
 const newId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -43,6 +76,15 @@ interface HealthReportState {
   switchProfile: (id: string) => void;
   removeProfile: (id: string) => void;
   renameProfile: (id: string, name: string, relation: string) => void;
+
+  addMedication: (med: Omit<Medication, "id">) => void;
+  updateMedication: (id: string, patch: Partial<Omit<Medication, "id">>) => void;
+  removeMedication: (id: string) => void;
+
+  saveCheckIn: (checkIn: CheckIn) => void;
+
+  addGoal: (goal: Omit<Goal, "id" | "createdAt">) => void;
+  removeGoal: (id: string) => void;
 }
 
 export const useHealthReport = create<HealthReportState>()(
@@ -120,6 +162,75 @@ export const useHealthReport = create<HealthReportState>()(
         renameProfile: (id, name, relation) => {
           set({
             profiles: get().profiles.map(p => p.id === id ? { ...p, name, relation } : p),
+          });
+        },
+
+        addMedication: (med) => {
+          const { profiles, currentProfileId } = get();
+          const id = newId();
+          set({
+            profiles: profiles.map(p =>
+              p.id === currentProfileId
+                ? { ...p, medications: [{ ...med, id }, ...(p.medications ?? [])] }
+                : p
+            ),
+          });
+        },
+
+        updateMedication: (id, patch) => {
+          const { profiles, currentProfileId } = get();
+          set({
+            profiles: profiles.map(p =>
+              p.id === currentProfileId
+                ? { ...p, medications: (p.medications ?? []).map(m => m.id === id ? { ...m, ...patch } : m) }
+                : p
+            ),
+          });
+        },
+
+        removeMedication: (id) => {
+          const { profiles, currentProfileId } = get();
+          set({
+            profiles: profiles.map(p =>
+              p.id === currentProfileId
+                ? { ...p, medications: (p.medications ?? []).filter(m => m.id !== id) }
+                : p
+            ),
+          });
+        },
+
+        addGoal: (goal) => {
+          const { profiles, currentProfileId } = get();
+          const id = newId();
+          const createdAt = new Date().toISOString();
+          set({
+            profiles: profiles.map(p =>
+              p.id === currentProfileId
+                ? { ...p, goals: [{ ...goal, id, createdAt }, ...(p.goals ?? [])] }
+                : p
+            ),
+          });
+        },
+
+        removeGoal: (id) => {
+          const { profiles, currentProfileId } = get();
+          set({
+            profiles: profiles.map(p =>
+              p.id === currentProfileId
+                ? { ...p, goals: (p.goals ?? []).filter(g => g.id !== id) }
+                : p
+            ),
+          });
+        },
+
+        saveCheckIn: (checkIn) => {
+          const { profiles, currentProfileId } = get();
+          set({
+            profiles: profiles.map(p => {
+              if (p.id !== currentProfileId) return p;
+              const existing = (p.checkIns ?? []).filter(c => c.date !== checkIn.date);
+              return { ...p, checkIns: [checkIn, ...existing].slice(0, 365) };
+            }),
           });
         },
       };

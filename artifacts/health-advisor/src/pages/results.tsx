@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { AskAI } from "@/components/AskAI";
 import { DoctorSummary } from "@/components/DoctorSummary";
 import { RemindersButton } from "@/components/RemindersButton";
+import { ShareReport } from "@/components/ShareReport";
 import { Save, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -23,6 +24,8 @@ import {
   Sparkles, ListChecks, Stethoscope, ShieldCheck, ShieldAlert
 } from "lucide-react";
 import { NearbySpecialists } from "@/components/NearbySpecialists";
+import { MedInteractionAlert } from "@/components/MedInteractionAlert";
+import { CostEstimator } from "@/components/CostEstimator";
 import { format } from "date-fns";
 
 export default function Results() {
@@ -132,6 +135,7 @@ export default function Results() {
           <Link href="/plan"><Button variant="outline" size="sm" className="gap-2"><Sparkles className="h-4 w-4" />Get 7-Day Plan</Button></Link>
           <DoctorSummary inputs={lastInputs ?? {}} report={lastReport} />
           <RemindersButton report={lastReport} />
+          <ShareReport inputs={lastInputs ?? {}} report={lastReport} />
         </div>
 
         {/* Hero Summary */}
@@ -437,8 +441,14 @@ export default function Results() {
           </div>
         </div>
 
+        {/* Medication interactions */}
+        <MedInteractionAlert flags={lastReport.flags} />
+
         {/* Ask AI */}
         <AskAI inputs={lastInputs ?? {}} report={lastReport} />
+
+        {/* Lab cost estimator */}
+        <CostEstimator followUps={lastReport.followUp ?? []} />
 
         {/* Nearby Specialists */}
         <NearbySpecialists flags={lastReport.flags} />
